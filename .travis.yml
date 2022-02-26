@@ -9,7 +9,7 @@ node_js:
   - "12"
 branches:
   only:
-    - master
+    - main
 # 要执行的脚本
 script:
   - npm run test:cov
