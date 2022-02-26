@@ -94,7 +94,8 @@ export default {
         const res = await post(api.commitUserInfo, params)
 
         this.pending = false
-        if (res.code === 1) {
+        console.log(res)
+        if (res.code === 0) {
           console.log("提交成功")
           this.$emit('summitSuccess')
           return

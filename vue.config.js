@@ -8,6 +8,25 @@ function needMock(req) {
   return edRe.test(req.headers.referer);
 }
 
+const mockupHandler = function (req, res, next) {
+  if (req.headers.referer && needMock(req)) {
+    try {
+      const reqPath = req.path;
+      let modulePath = require.resolve(
+        "./__mocks__" + reqPath.replace(/^\/data\//, "/")
+      );
+
+      res.type("json");
+      require(modulePath)(req, res, next);
+    } catch (e) {
+      console.error(e);
+      res.sendStatus(500);
+    }
+  } else {
+    next();
+  }
+};
+
 module.exports = {
   productionSourceMap: false,
   publicPath: "./",

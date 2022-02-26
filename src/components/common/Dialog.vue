@@ -7,7 +7,7 @@
 <template>
   <div
     class="modal-bg"
-    v-show="show"
+    v-if="show"
     @click.self="hideModal"
   >
     <div class="modal-container">
