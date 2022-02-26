@@ -1,6 +1,6 @@
 //请求封装，报错统一
 
-export const post = async function postData(url = "", data = {}) {
+export const post = async function (url = "", data = {}) {
   await fetch(url, {
     method: "POST",
     cache: "no-cache",

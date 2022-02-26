@@ -2,6 +2,12 @@ const path = require("path");
 // const HotHashWebpackPlugin = require("hot-hash-webpack-plugin");
 const resolve = (dir) => path.join(__dirname, ".", dir);
 
+const edRe = /[?&](?:ed)\b/i;
+
+function needMock(req) {
+  return edRe.test(req.headers.referer);
+}
+
 module.exports = {
   productionSourceMap: false,
   publicPath: "./",
@@ -12,35 +18,27 @@ module.exports = {
     host: "0.0.0.0",
     https: false,
     open: true,
+    before(app) {
+      app.use((req, res, next) => {
+        if (needMock(req)) {
+          require("body-parser").urlencoded({
+            extended: true,
+          })(req, res, next);
+        } else {
+          next();
+        }
+      });
+      app.get(/^\/data\//, mockupHandler);
+      app.post(/^\/data\//, mockupHandler);
+    },
   },
 
   chainWebpack: (config) => {
-    const types = ["vue-modules", "vue", "normal-modules", "normal"];
-    types.forEach((type) => {
-      let rule = config.module.rule("less").oneOf(type);
-      rule
-        .use("style-resource")
-        .loader("style-resources-loader")
-        .options({
-          patterns: [path.resolve(__dirname, "./lessVariates.less")],
-        });
-    });
-
     config.resolve.alias
       .set("@", resolve("src"))
       .set("views", resolve("src/views"))
       .set("api", resolve("src/apis"))
       .set("components", resolve("src/components"));
-
-    config.module
-      .rule("images")
-      .use("url-loader")
-      .tap((options) => ({
-        name: "./assets/images/[name].[ext]",
-        quality: 85,
-        limit: 0,
-        esModule: false,
-      }));
 
     config.module
       .rule("svg")
@@ -50,18 +48,11 @@ module.exports = {
       .use("svg-sprite-loader")
       .loader("svg-sprite-loader");
 
-    config.plugin("define").tap((args) => [
-      {
-        ...args,
-        "window.isDefine": JSON.stringify(true),
-      },
-    ]);
-
     // 生产环境配置
     if (process.env.NODE_ENV === "production") {
       config.output.filename("./js/[name].[chunkhash:8].js");
       config.output.chunkFilename("./js/[name].[chunkhash:8].js");
-      config.plugin("extract-css").tap((args) => [
+      config.plugin("extract-css").tap(() => [
         {
           filename: "css/[name].[contenthash:8].css",
           chunkFilename: "css/[name].[contenthash:8].css",
@@ -103,10 +94,7 @@ module.exports = {
   pluginOptions: {
     "style-resources-loader": {
       preProcessor: "less",
-      patterns: [
-        // 这个是绝对路径,不能使用 alias中配置的别名路径，如@表示的src
-        path.resolve(__dirname, "./src/style/params.less"),
-      ],
+      patterns: [path.resolve(__dirname, "./src/style/params.less")],
     },
   },
 };

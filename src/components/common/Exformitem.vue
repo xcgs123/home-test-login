@@ -37,7 +37,7 @@ export default {
       const descriptor = { [this.prop]: rule };
       const schema = new Schema(descriptor);
       const source = { [this.prop]: val };
-			
+
       schema.validate(source, error => {
         if (error) {
           this.error = error[0].message;//如果有错误，将错误信息赋给error
